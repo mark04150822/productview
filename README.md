@@ -2,6 +2,32 @@
 
 一個基於 Next.js 的現代化商品展示網站，支援 SSR、篩選、分頁和響應式設計。
 
+## 🌐 線上預覽
+
+**線上網址：** [https://productview-silk.vercel.app/](https://productview-silk.vercel.app/)
+
+## 🎯 主要功能
+
+### 1. 首頁 (`/`)
+- 響應式商品網格展示
+- 基本篩選功能
+- 連結到進階篩選頁面
+- **預覽：** [首頁](https://productview-silk.vercel.app/)
+
+### 2. 商品篩選頁面 (`/products`)
+- **SSR 支援** - 伺服器端渲染和資料取得
+- **完整篩選功能**：
+  - 關鍵字搜尋
+  - 分類篩選 (A, B, C, D, E)
+  - 價格範圍篩選
+  - 庫存狀態篩選
+  - 排序方向 (升序/降序)
+  - 每頁商品數量設定
+- **分頁導航** - 智能分頁顯示
+- **URL 同步** - 篩選條件反映在 URL 中
+- **無刷新導航** - 使用 `router.replace` 實現
+- **預覽：** [商品篩選頁面](https://productview-silk.vercel.app/products)
+
 ## 🚀 專案特色
 
 - **Next.js 15.5.2** - 最新的 React 框架，支援 SSR/SSG
@@ -67,72 +93,7 @@ productview/
 ### HTTP 客戶端
 - **Axios** - 基於 Promise 的 HTTP 客戶端
 
-## 🎯 主要功能
 
-### 1. 首頁 (`/`)
-- 響應式商品網格展示
-- 基本篩選功能
-- 連結到進階篩選頁面
-
-### 2. 商品篩選頁面 (`/products`)
-- **SSR 支援** - 伺服器端渲染和資料取得
-- **完整篩選功能**：
-  - 關鍵字搜尋
-  - 分類篩選 (A, B, C, D, E)
-  - 價格範圍篩選
-  - 庫存狀態篩選
-  - 排序方向 (升序/降序)
-  - 每頁商品數量設定
-- **分頁導航** - 智能分頁顯示
-- **URL 同步** - 篩選條件反映在 URL 中
-- **無刷新導航** - 使用 `router.replace` 實現
-
-### 3. API 端點
-
-#### `/api/products`
-- 取得所有商品資料
-- 回傳 JSON 格式的商品列表
-
-#### `/api/products-filter`
-- 支援多種篩選參數：
-  - `keyword` - 關鍵字搜尋
-  - `category` - 分類篩選
-  - `minPrice` / `maxPrice` - 價格範圍
-  - `inStock` - 庫存狀態
-  - `sortBy` - 排序方向
-  - `pageNow` - 當前頁碼
-  - `productNum` - 每頁商品數量
-- 回傳格式：
-  ```json
-  {
-    "items": [...],
-    "pageCount": 10,
-    "productCount": 1000,
-    "pageNow": 1
-  }
-  ```
-
-## 🚀 快速開始
-
-### 安裝依賴
-```bash
-npm install
-```
-
-### 開發模式
-```bash
-npm run dev
-```
-
-### 建置專案
-```bash
-npm run build
-```
-
-### 生產模式
-```bash
-npm start
-```
 
 ## 📱 響應式設計
 
@@ -155,52 +116,143 @@ npm start
 - 完整的 TypeScript 類型定義
 - 介面定義清晰明確
 
-## 🌐 部署
 
-### Vercel (推薦)
-```bash
-npm run build
-# 部署到 Vercel 平台
+## 🔌 API 功能說明
+
+### 1. 取得所有商品 API
+
+**端點：** `GET /api/products`
+
+**功能：** 取得所有商品資料，用於首頁展示和基本商品列表。
+
+**Request：**
+- 方法：`GET`
+- 參數：無
+- 路徑：`/api/products`
+
+**Response：**
+```json
+[
+  {
+    "id": 1,
+    "name": "商品名稱",
+    "price": 100,
+    "image": "product-image.jpg",
+    "category": "A",
+    "inStock": true
+  }
+]
 ```
 
-### 其他平台
-```bash
-npm run build
-npm start
+**呼叫範例：**
+```javascript
+// 使用 fetch
+fetch('/api/products')
+  .then(response => response.json())
+  .then(data => console.log(data));
+
+// 使用 axios
+import axios from 'axios';
+const response = await axios.get('/api/products');
+console.log(response.data);
 ```
 
-## 📝 資料格式
+### 2. 商品篩選 API
 
-### 商品資料結構
-```typescript
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  category: string;
-  inStock: boolean;
+**端點：** `GET /api/products-filter`
+
+**功能：** 支援多種篩選條件的高級商品搜尋，包含分頁功能。
+
+**Request：**
+- 方法：`GET`
+- 查詢參數：
+  - `keyword` (可選) - 關鍵字搜尋
+  - `category` (可選) - 分類篩選 (A, B, C, D, E)
+  - `minPrice` (可選) - 最低價格
+  - `maxPrice` (可選) - 最高價格
+  - `inStock` (可選) - 庫存狀態 (true/false)
+  - `sortBy` (可選) - 排序方向 ("asc" 升序 / "desc" 降序)
+  - `pageNow` (可選) - 當前頁碼，預設為 1
+  - `productNum` (可選) - 每頁商品數量，預設為 10
+
+**Response：**
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "name": "商品名稱",
+      "price": 100,
+      "image": "product-image.jpg",
+      "category": "A",
+      "inStock": true
+    }
+  ],
+  "pageCount": 10,
+  "productCount": 1000,
+  "pageNow": 1
 }
 ```
 
-### 篩選回應結構
-```typescript
-interface FilteredResponse {
-  items: Product[];
-  pageCount: number;
-  productCount: number;
-  pageNow: number;
-}
+**呼叫範例：**
+
+#### 基本篩選
+```javascript
+// 搜尋包含 "手機" 的商品
+const response = await axios.get('/api/products-filter?keyword=手機');
 ```
 
-## 🤝 貢獻
+#### 分類篩選
+```javascript
+// 篩選 A 分類的商品
+const response = await axios.get('/api/products-filter?category=A');
+```
 
-歡迎提交 Issue 和 Pull Request！
+#### 價格範圍篩選
+```javascript
+// 篩選價格在 100-500 之間的商品
+const response = await axios.get('/api/products-filter?minPrice=100&maxPrice=500');
+```
 
-## 📄 授權
+#### 庫存狀態篩選
+```javascript
+// 只顯示有庫存的商品
+const response = await axios.get('/api/products-filter?inStock=true');
+```
 
-MIT License
+#### 排序和分頁
+```javascript
+// 按價格升序排列，第 2 頁，每頁 20 個商品
+const response = await axios.get('/api/products-filter?sortBy=asc&pageNow=2&productNum=20');
+```
 
----
+#### 完整篩選範例
+```javascript
+// 綜合篩選：A 分類、價格 100-1000、有庫存、按價格升序、第 1 頁、每頁 15 個
+const params = new URLSearchParams({
+  category: 'A',
+  minPrice: '100',
+  maxPrice: '1000',
+  inStock: 'true',
+  sortBy: 'asc',
+  pageNow: '1',
+  productNum: '15'
+});
 
-**ProductView** - 現代化的商品展示解決方案 🚀
+const response = await axios.get(`/api/products-filter?${params}`);
+console.log(response.data);
+```
+
+**錯誤處理：**
+```javascript
+try {
+  const response = await axios.get('/api/products-filter?category=invalid');
+  console.log(response.data);
+} catch (error) {
+  if (error.response) {
+    console.error('API 錯誤:', error.response.status, error.response.data);
+  } else {
+    console.error('網路錯誤:', error.message);
+  }
+}
+```
