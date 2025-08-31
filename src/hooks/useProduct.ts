@@ -13,7 +13,6 @@ export const useProduct = () => {
   const [maxPrice, setMaxPrice] = useState<number>(10000);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [inStock, setInStock] = useState<boolean>(true);
-  const [sortBy, setSortBy] = useState<'name' | 'price' | 'category'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // 篩選後的商品狀態
@@ -55,27 +54,8 @@ export const useProduct = () => {
 
     // 排序
     filtered.sort((a: Product, b: Product) => {
-      let aValue: any;
-      let bValue: any;
-
-      switch (sortBy) {
-        case 'name':
-          aValue = a.name.toLowerCase();
-          bValue = b.name.toLowerCase();
-          break;
-        case 'price':
-          aValue = a.price;
-          bValue = b.price;
-          break;
-        case 'category':
-          aValue = a.category.toLowerCase();
-          bValue = b.category.toLowerCase();
-          break;
-        default:
-          aValue = a.name.toLowerCase();
-          bValue = b.name.toLowerCase();
-      }
-
+      let aValue = a.price;
+      let bValue = b.price;
       if (sortOrder === 'asc') {
         return aValue > bValue ? 1 : -1;
       } else {
@@ -85,7 +65,7 @@ export const useProduct = () => {
 
     // 更新篩選後的商品狀態
     setFilteredProducts(filtered);
-  }, [products, category, minPrice, maxPrice, searchTerm, inStock, sortBy, sortOrder]);
+  }, [products, category, minPrice, maxPrice, searchTerm, inStock, sortOrder]);
 
   // 取得所有分類
   const categories = useMemo(() => {
@@ -99,7 +79,6 @@ export const useProduct = () => {
     setMaxPrice(10000);
     setSearchTerm('');
     setInStock(true);
-    setSortBy('name');
     setSortOrder('asc');
   };
 
@@ -122,7 +101,6 @@ export const useProduct = () => {
     maxPrice,
     searchTerm,
     inStock,
-    sortBy,
     sortOrder,
     
     // 篩選條件設定方法
@@ -131,7 +109,6 @@ export const useProduct = () => {
     setMaxPrice,
     setSearchTerm,
     setInStock,
-    setSortBy,
     setSortOrder,
     
     // 其他方法
