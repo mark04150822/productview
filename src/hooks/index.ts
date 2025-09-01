@@ -1,1 +1,2 @@
-export { useProduct } from './useProduct';
+export { default as useProduct } from './useProduct';
+export { useInfiniteScroll } from './useInfiniteScroll';

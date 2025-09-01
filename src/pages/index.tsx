@@ -1,15 +1,25 @@
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import { useProduct } from '../hooks/useProduct';
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { DisplayMode } from '../types';
+import { ProductList, ProductCard, LoadingProgress } from '../components';
 
 export default function Home() {
   const {
-    products, filteredProducts, categories, loading, error,
+    products, filteredProducts, currentProducts, categories, loading, error,
     category, minPrice, maxPrice, searchTerm, inStock, sortOrder,
+    currentPage, itemsPerPage, hasMore, totalCount,
     setCategory, setMinPrice, setMaxPrice, setSearchTerm, setInStock, setSortOrder,
-    clearFilters, refreshProducts,
+    clearFilters, refreshProducts, loadMore,
   } = useProduct();
+
+  // 無限滾動 hook
+  const loadingRef = useInfiniteScroll({
+    onLoadMore: loadMore,
+    hasMore,
+    loading,
+  });
 
   // 顯示模式狀態 - 桌機版預設為列表，手機版預設為卡片
   const [displayMode, setDisplayMode] = useState<DisplayMode>('list');
@@ -210,8 +220,13 @@ export default function Home() {
           {/* 結果統計 */}
           <div className="text-center">
             <p className="text-sm text-gray-500">
-              顯示 {filteredProducts.length} 個商品，共 {products.length} 筆資料
+              顯示 {currentProducts.length} 個商品，共 {filteredProducts.length} 筆資料
             </p>
+            {hasMore && (
+              <p className="text-xs text-blue-500 mt-1">
+                還有 {filteredProducts.length - currentProducts.length} 筆商品待載入
+              </p>
+            )}
           </div>
         </section>
 
@@ -225,103 +240,33 @@ export default function Home() {
             <>
               {/* 卡片顯示模式 */}
               {displayMode === 'card' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {filteredProducts.map((product) => (
-                    <div key={product.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-200">
-                      <div className="w-full h-48 overflow-hidden">
-                        <img
-                          src="/img/product-placeholder-512.png"
-                          alt={product.name}
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <div className="p-5">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4 line-clamp-2">
-                          {product.name}
-                        </h3>
-                        <div className="flex justify-between items-center flex-wrap gap-2">
-                          <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-medium">
-                            {product.category}
-                          </span>
-                          <span className="text-red-600 font-semibold text-lg">
-                            NT$ {product.price.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="mt-2 text-xs text-gray-500">
-                          庫存: {product.inStock ? '有庫存' : '無庫存'}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <>
+                  <ProductCard products={currentProducts} />
+                  <LoadingProgress
+                    current={currentProducts.length}
+                    total={totalCount}
+                    onLoadMore={loadMore}
+                    hasMore={hasMore}
+                    loading={loading}
+                  />
+                </>
               )}
 
               {/* 列表顯示模式 */}
               {displayMode === 'list' && (
-                <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            商品圖片
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            商品名稱
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            分類
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            價格
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            庫存狀態
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredProducts.map((product) => (
-                          <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="w-16 h-16 overflow-hidden rounded-lg">
-                                <img
-                                  src="/img/product-placeholder-512.png"
-                                  alt={product.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900">
-                                {product.name}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-medium">
-                                {product.category}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-semibold text-red-600">
-                                NT$ {product.price.toLocaleString()}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                product.inStock 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {product.inStock ? '有庫存' : '無庫存'}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                <>
+                  <ProductList products={currentProducts} />
+                  {/* 無限滾動觸發點 */}
+                  {hasMore && (
+                    <div ref={loadingRef} className="h-10 flex items-center justify-center">
+                      {loading ? (
+                        <div className="text-blue-600">載入中...</div>
+                      ) : (
+                        <div className="text-gray-400">滾動到底部載入更多</div>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}

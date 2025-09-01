@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { getProducts } from '../actions/productAction';
 import { Product } from '../types';
@@ -14,6 +14,11 @@ export const useProduct = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [inStock, setInStock] = useState<boolean>(true);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  // 分頁狀態
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage] = useState<number>(20);
+  const [hasMore, setHasMore] = useState<boolean>(true);
 
   // 篩選後的商品狀態
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -65,7 +70,31 @@ export const useProduct = () => {
 
     // 更新篩選後的商品狀態
     setFilteredProducts(filtered);
-  }, [products, category, minPrice, maxPrice, searchTerm, inStock, sortOrder]);
+    
+    // 重置分頁狀態
+    setCurrentPage(1);
+    setHasMore(filtered.length > itemsPerPage);
+  }, [products, category, minPrice, maxPrice, searchTerm, inStock, sortOrder, itemsPerPage]);
+
+  // 取得當前頁面顯示的商品
+  const currentProducts = useMemo(() => {
+    const startIndex = 0;
+    const endIndex = currentPage * itemsPerPage;
+    return filteredProducts.slice(startIndex, endIndex);
+  }, [filteredProducts, currentPage, itemsPerPage]);
+
+  // 加載更多商品
+  const loadMore = useCallback(() => {
+    if (hasMore) {
+      setCurrentPage(prev => prev + 1);
+      setHasMore(currentProducts.length + itemsPerPage < filteredProducts.length);
+    }
+  }, [hasMore, currentProducts.length, itemsPerPage, filteredProducts.length]);
+
+  // 檢查是否還有更多商品
+  useEffect(() => {
+    setHasMore(currentProducts.length < filteredProducts.length);
+  }, [currentProducts.length, filteredProducts.length]);
 
   // 取得所有分類
   const categories = useMemo(() => {
@@ -80,20 +109,29 @@ export const useProduct = () => {
     setSearchTerm('');
     setInStock(true);
     setSortOrder('asc');
+    setCurrentPage(1);
   };
 
   // 重新取得商品資料
   const refreshProducts = () => {
     dispatch(getProducts());
+    setCurrentPage(1);
   };
 
   return {
     // 資料
     products,
     filteredProducts,
+    currentProducts,
     categories,
     loading,
     error,
+    
+    // 分頁狀態
+    currentPage,
+    itemsPerPage,
+    hasMore,
+    totalCount: filteredProducts.length,
     
     // 篩選條件狀態
     category,
@@ -111,8 +149,13 @@ export const useProduct = () => {
     setInStock,
     setSortOrder,
     
+    // 分頁方法
+    loadMore,
+    
     // 其他方法
     clearFilters,
     refreshProducts,
   };
 };
+
+export default useProduct;
